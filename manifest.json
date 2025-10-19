@@ -16,19 +16,16 @@
     "web_accessible_resources": [
       {
         "resources": [
-          "assets/bookmark.png",
-          "assets/play.png",
-          "assets/delete.png",
-          "assets/save.png"
+          "assets/start_button.png"
         ],
         "matches": ["https://*.reddit.com/*"]
       }
     ],
     "action": {
       "default_icon": {
-        "16": "assets/ext-icon.png",
-        "24": "assets/ext-icon.png",
-        "32": "assets/ext-icon.png"
+        "16": "assets/credify-icon.png",
+        "24": "assets/credify-icon.png",
+        "32": "assets/credify-icon.png"
       },
       "default_title": "Credify",
       "default_popup": "popup.html"
