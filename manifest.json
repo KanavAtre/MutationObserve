@@ -1,34 +1,34 @@
 {
-    "name": "Credify",
-    "version": "0.1.0",
-    "description": "Misinformation checker for reddit",
-    "permissions": ["storage", "tabs"],
-    "host_permissions": ["https://*.reddit.com/*"],
-    "background": {
-      "service_worker": "background.js"
+  "name": "Credify",
+  "version": "0.1.0",
+  "description": "Misinformation checker for reddit",
+  "permissions": ["storage", "tabs", "activeTab"],
+  "host_permissions": ["https://*.reddit.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.reddit.com/*"],
+      "js": ["contentScript.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/start-button.png"
+      ],
+      "matches": ["https://*.reddit.com/*"]
+    }
+  ],
+  "action": {
+    "default_icon": {
+      "16": "assets/credify-icon.png",
+      "24": "assets/credify-icon.png",
+      "32": "assets/credify-icon.png"
     },
-    "content_scripts": [
-      {
-        "matches": ["https://*.reddit.com/*"],
-        "js": ["contentScript.js"]
-      }
-    ],
-    "web_accessible_resources": [
-      {
-        "resources": [
-          "assets/start_button.png"
-        ],
-        "matches": ["https://*.reddit.com/*"]
-      }
-    ],
-    "action": {
-      "default_icon": {
-        "16": "assets/credify-icon.png",
-        "24": "assets/credify-icon.png",
-        "32": "assets/credify-icon.png"
-      },
-      "default_title": "Credify",
-      "default_popup": "popup.html"
-    },
-    "manifest_version": 3
+    "default_title": "Credify",
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 3
 }

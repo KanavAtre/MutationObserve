@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credify</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 10px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .header img {
+      width: 24px;
+      height: 24px;
+      margin-right: 10px;
+    }
+    .header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+    .description {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 15px;
+    }
+    .status {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .status-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    button {
+      background-color: #ff4500;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #e03d00;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="assets/credify-icon.png" alt="Credify Icon">
+    <h1>Credify</h1>
+  </div>
+  
+  <div class="description">
+    Check Reddit posts for potential misinformation and get credibility scores.
+  </div>
+  
+  <div class="status">
+    <div class="status-title">Current Post</div>
+    <div id="current-post">Not currently viewing a Reddit post</div>
+  </div>
+
+  <div class="status">
+    <div class="status-title">Credibility Score</div>
+    <div id="credibility-score">No score available</div>
+  </div>
+  
+  <button id="check-button">Check Current Post</button>
+
+  <script src="popup.js"></script>
+</body>
+</html>
