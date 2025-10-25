@@ -47,7 +47,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         // Trigger content script to analyze the current post
         chrome.tabs.sendMessage(request.tabId, { type: "ANALYZE_NOW" });
         
-        // Get the latest analysis result
         chrome.storage.local.get('lastAnalysis', function(data) {
             if (data.lastAnalysis) {
                 sendResponse({ 
