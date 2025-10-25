@@ -2,7 +2,12 @@
 (() => {
     let currPost = "";
     chrome.runtime.onMessage.addListener((obj, sender, response) => {
-        const {postId, title, subreddit, text} = obj;
+        const {postId, title, subreddit, text, type} = obj;
     });
+
+    if (type === "top"){
+        currPost = postId;
+        newTopPost();
+    }
 })();
 
