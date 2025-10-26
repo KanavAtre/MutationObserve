@@ -23,7 +23,6 @@ function showLoadingModal() {
     `;
     document.body.appendChild(modal);
     
-    // Add event listeners for close buttons
     attachCloseListeners(modal);
 }
 
@@ -35,7 +34,6 @@ function showCredibilityModal(analysis) {
 
     const modal = createModalContainer();
     
-    // Determine score color
     const scoreColor = analysis.score >= 7 ? '#10b981' : 
                       analysis.score >= 4 ? '#f59e0b' : '#ef4444';
     
@@ -105,7 +103,6 @@ function createModalContainer() {
     const modal = document.createElement('div');
     modal.className = 'credify-modal';
     
-    // Inject styles if not already present
     if (!document.querySelector('#credify-modal-styles')) {
         const styles = document.createElement('style');
         styles.id = 'credify-modal-styles';

@@ -20,7 +20,6 @@
             return "Unknown Post";
         }
 
-        // Try multiple selectors for post title
         let title = null;
 
         // Method 1: Try to get title from post-title attribute
@@ -191,16 +190,14 @@
     }
 
     async function injectButtonForPost(postId) {
-        // Check if already processed (prevents duplicate async calls)
         if (processedPosts.has(postId)) {
             return true;
         }
 
-        // Prevent duplicate buttons (check both button and container)
         if (document.querySelector(`.credi-btn[data-post-id="${postId}"]`) || 
             document.querySelector(`.credi-button-container[data-post-id="${postId}"]`)) {
             processedPosts.add(postId);
-            return true; // Already exists, consider it a success
+            return true; 
         }
 
         // Mark as being processed
@@ -213,7 +210,6 @@
             return false;
         }
 
-        // Diagnostic: Check shadow root accessibility
         console.log(`Post element found for ${postId}:`, {
             tagName: postElement.tagName,
             hasShadowRoot: !!postElement.shadowRoot,
@@ -221,7 +217,6 @@
             classList: Array.from(postElement.classList || [])
         });
 
-        // Try to locate the action bar (inside shadow root if accessible, or outside)
         let actionBar = findActionBar(postElement);
         let retries = 0;
         while (!actionBar && retries < 10) {
@@ -232,7 +227,6 @@
 
         if (!actionBar) {
             console.log(`Action bar not found for ${postId}, trying alternative injection...`);
-            // Alternative: inject adjacent to the post element
             return injectButtonAdjacent(postId, postElement);
         }
         
@@ -257,7 +251,6 @@
     }
 
     function findActionBar(postElement) {
-        // Try shadow root first (only works if mode="open")
         if (postElement.shadowRoot) {
             console.log('Shadow root is accessible (open mode)');
             const toolbar = postElement.shadowRoot.querySelector(
@@ -271,8 +264,6 @@
             console.log('Shadow root is NOT accessible (closed mode or doesn\'t exist)');
         }
 
-        // Try to find action bar outside shadow DOM
-        // Look for sibling or adjacent elements
         const actionBarSelectors = [
             "[data-testid='post-actions']",
             ".Post__actions",
@@ -396,7 +387,6 @@
                     analysis
                 });
                 
-                // Show results after a short delay (simulating API call)
                 setTimeout(() => {
                     chrome.storage.local.get("lastAnalysis", function (data) {
                         if (data.lastAnalysis && data.lastAnalysis.postId === postId) {
@@ -417,7 +407,6 @@
         });
     }
 
-    // Debounce function to prevent excessive calls
     function debounce(func, wait) {
         let timeout;
         return function executedFunction(...args) {
@@ -468,7 +457,6 @@
         }, 1000);
     }
 
-    // Use debounced version in MutationObserver to prevent excessive calls
     const observer = new MutationObserver(debouncedInjectButtons);
     observer.observe(document.body, { childList: true, subtree: true });
 })();
