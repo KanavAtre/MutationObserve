@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "description": "Misinformation checker for reddit",
   "permissions": ["storage", "tabs", "activeTab"],
-  "host_permissions": ["https://*.reddit.com/*"],
+  "host_permissions": [
+    "https://*.reddit.com/*",
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["https://*.reddit.com/*"],
-      "js": ["credibilityModal.js", "contentScript.js"]
+      "js": ["lib/axios.min.js", "credibilityModal.js", "contentScript.js"]
     }
   ],
   "web_accessible_resources": [

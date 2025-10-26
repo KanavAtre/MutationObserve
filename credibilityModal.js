@@ -72,6 +72,13 @@ function showCredibilityModal(analysis) {
                     </div>
                 </div>
                 
+                ${analysis.description ? `
+                    <div class="credify-description-section">
+                        <h3>📝 Analysis</h3>
+                        <p class="credify-description-text">${analysis.description}</p>
+                    </div>
+                ` : ''}
+                
                 ${analysis.flags && analysis.flags.length > 0 ? `
                     <div class="credify-flags-section">
                         <h3>⚠️ Flags Detected</h3>
@@ -241,16 +248,32 @@ function createModalContainer() {
             }
             
             .credify-details-section,
+            .credify-description-section,
             .credify-flags-section {
                 margin-top: 20px;
             }
             
             .credify-details-section h3,
+            .credify-description-section h3,
             .credify-flags-section h3 {
                 font-size: 16px;
                 font-weight: 600;
                 color: #111827;
                 margin: 0 0 12px 0;
+            }
+            
+            .credify-description-section {
+                background: #f9fafb;
+                padding: 16px;
+                border-radius: 8px;
+                border-left: 4px solid #3b82f6;
+            }
+            
+            .credify-description-text {
+                margin: 0;
+                font-size: 14px;
+                line-height: 1.6;
+                color: #374151;
             }
             
             .credify-info-item {

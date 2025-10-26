@@ -30,12 +30,32 @@
         };
     };
 
-    const analyzePost = (postId, subreddit, postTitle) => {
-        return {
-            score: Math.floor(Math.random() * 10) + 1,
-            flags: ["Unverified source", "Disputed claims"],
-            title: postTitle
-        };
+    const analyzePost = async (postId, subreddit, postTitle) => {
+        try {
+            // Call the gateway agent (llm_agent.py) which orchestrates NYT and scoring agents
+            const response = await axios.post('http://localhost:8000/fact-check', {
+                query: postTitle,
+                begin_date: "20240101",  // Dummy date - past year
+                end_date: "20241231"     // Dummy date - current year
+            });
+            
+            // Response format: { score: 0.0-1.0, flags: [...], description: "..." }
+            return {
+                score: response.data.score ? (response.data.score * 10).toFixed(1) : 5, // Convert 0-1 to 0-10 scale
+                flags: response.data.flags || [],
+                description: response.data.description || "No analysis available",
+                title: postTitle
+            };
+        } catch (error) {
+            console.error('Credify API Error:', error);
+            // Fallback to mock data if API fails
+            return {
+                score: 5,
+                flags: ["API unavailable"],
+                description: "Unable to connect to fact-checking service. Please ensure agents are running.",
+                title: postTitle
+            };
+        }
     };
 
     // Extract post title from DOM
@@ -109,7 +129,7 @@
             const success = await injectButtonForPost(postId);
             if (success) {
                 const postTitle = getPostTitle(postId);
-                const analysis = analyzePost(postId, subreddit, postTitle);
+                const analysis = await analyzePost(postId, subreddit, postTitle);
                 chrome.runtime.sendMessage({
                     content: "postAnalyzed",
                     postId,
@@ -309,15 +329,15 @@
         return button;
     }
 
-    function handleButtonClick(postId) {
-        chrome.storage.local.get("lastAnalysis", function (data) {
+    async function handleButtonClick(postId) {
+        chrome.storage.local.get("lastAnalysis", async function (data) {
             if (data.lastAnalysis && data.lastAnalysis.postId === postId) {
                 window.showCredibilityModal(data.lastAnalysis);
             } else {
                 window.showLoadingModal();
                 const subreddit = window.location.pathname.split("/")[2];
                 const postTitle = getPostTitle(postId);
-                const analysis = analyzePost(postId, subreddit, postTitle);
+                const analysis = await analyzePost(postId, subreddit, postTitle);
                 chrome.runtime.sendMessage({
                     content: "postAnalyzed",
                     postId,
@@ -331,7 +351,7 @@
                             window.showCredibilityModal(data.lastAnalysis);
                         }
                     });
-                }, 500);
+                }, 2000); // Increased timeout to allow API to respond
             }
         });
     }

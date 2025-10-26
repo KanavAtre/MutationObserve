@@ -1,6 +1,11 @@
 # Environment variables
 .env
 
+# Node modules
+node_modules/
+package-lock.json
+lib/
+
 # Virtual environment
 venv/
 env/
