@@ -10,7 +10,7 @@
   "content_scripts": [
     {
       "matches": ["https://*.reddit.com/*"],
-      "js": ["contentScript.js"]
+      "js": ["credibilityModal.js", "contentScript.js"]
     }
   ],
   "web_accessible_resources": [
