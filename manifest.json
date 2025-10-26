@@ -17,7 +17,8 @@
     {
       "resources": [
         "assets/start-button.png",
-        "assets/check.png"
+        "assets/check.png",
+        "assets/credify-icon.png"
       ],
       "matches": ["https://*.reddit.com/*"]
     }

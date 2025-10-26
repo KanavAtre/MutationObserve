@@ -3,8 +3,34 @@
     let currPost = "";
     const processedPosts = new Set(); // Track posts we've already processed
 
+    // Theme detection and colors
+    const getCurrentTheme = () => {
+        const shredditApp = document.querySelector('shreddit-app');
+        if (shredditApp) {
+            const theme = shredditApp.getAttribute('theme');
+            return theme === 'dark' ? 'dark' : 'light';
+        }
+        return 'light';
+    };
+
+    const getThemeColors = (theme) => {
+        if (theme === 'dark') {
+            return {
+                buttonBg: 'rgb(77, 200, 143)',
+                buttonHover: 'rgb(57, 180, 123)',
+                containerBg: '#1A1A1B',
+                containerBorder: '#343536'
+            };
+        }
+        return {
+            buttonBg: 'rgb(77, 200, 143)',
+            buttonHover: 'rgb(57, 180, 123)',
+            containerBg: '#f6f7f8',
+            containerBorder: '#edeff1'
+        };
+    };
+
     const analyzePost = (postId, subreddit, postTitle) => {
-        console.log(`Analyzing post ${postId} from r/${subreddit}: "${postTitle}"`);
         return {
             score: Math.floor(Math.random() * 10) + 1,
             flags: ["Unverified source", "Disputed claims"],
@@ -16,7 +42,6 @@
     const getPostTitle = (postId) => {
         const postElement = findPostElementById(postId);
         if (!postElement) {
-            console.log(`Cannot find post element for ${postId} to extract title`);
             return "Unknown Post";
         }
 
@@ -38,7 +63,6 @@
             const titleElement = postElement.querySelector(selector);
             if (titleElement && titleElement.textContent.trim()) {
                 title = titleElement.textContent.trim();
-                console.log(`Found title using selector ${selector}: "${title}"`);
                 return title;
             }
         }
@@ -48,7 +72,6 @@
             const shadowTitle = postElement.shadowRoot.querySelector('h1, [slot="title"]');
             if (shadowTitle && shadowTitle.textContent.trim()) {
                 title = shadowTitle.textContent.trim();
-                console.log(`Found title in shadow DOM: "${title}"`);
                 return title;
             }
         }
@@ -60,106 +83,18 @@
             const titleMatch = pageTitle.match(/^(.+?)\s*:\s*r\//);
             if (titleMatch) {
                 title = titleMatch[1].trim();
-                console.log(`Found title from page title: "${title}"`);
                 return title;
             }
         }
 
-        console.warn(`Could not extract title for post ${postId}`);
         return "Unknown Post";
     };
-
-    // Cleanup function to remove duplicate buttons
-    // Call this from console: window.cleanupDuplicateButtons()
-    window.cleanupDuplicateButtons = () => {
-        console.log('Cleaning up duplicate buttons...');
-        const seenPosts = new Set();
-        const allButtons = document.querySelectorAll('.credi-btn');
-        const allContainers = document.querySelectorAll('.credi-button-container');
-        
-        let removed = 0;
-        
-        allButtons.forEach(button => {
-            const postId = button.dataset.postId;
-            if (seenPosts.has(postId)) {
-                button.remove();
-                removed++;
-            } else {
-                seenPosts.add(postId);
-            }
-        });
-        
-        allContainers.forEach(container => {
-            const postId = container.dataset.postId;
-            if (seenPosts.has(postId)) {
-                container.remove();
-                removed++;
-            } else {
-                seenPosts.add(postId);
-            }
-        });
-        
-        console.log(`Removed ${removed} duplicate buttons/containers`);
-        processedPosts.clear();
-        console.log('Cleared processed posts cache');
-    };
-
-    // Diagnostic function to inspect Reddit's DOM structure
-    // Call this from console: window.inspectRedditDOM()
-    window.inspectRedditDOM = () => {
-        console.log('=== Reddit DOM Inspection ===');
-        const posts = document.querySelectorAll('shreddit-post[id]');
-        console.log(`Found ${posts.length} shreddit-post elements`);
-        
-        posts.forEach((post, index) => {
-            if (index < 3) { // Only log first 3 to avoid spam
-                console.log(`\nPost ${index + 1}:`, {
-                    id: post.id,
-                    tagName: post.tagName,
-                    hasShadowRoot: !!post.shadowRoot,
-                    shadowRootMode: post.shadowRoot ? 'OPEN' : 'CLOSED/NONE',
-                    classList: Array.from(post.classList),
-                    children: Array.from(post.children).map(c => c.tagName),
-                    nextSibling: post.nextElementSibling?.tagName,
-                    html: post.outerHTML.substring(0, 200) + '...'
-                });
-
-                // Try to log what's inside shadow root if accessible
-                if (post.shadowRoot) {
-                    const shadowChildren = Array.from(post.shadowRoot.children);
-                    console.log('  Shadow DOM children:', shadowChildren.map(c => ({
-                        tag: c.tagName,
-                        classes: Array.from(c.classList)
-                    })));
-                }
-            }
-        });
-
-        // Look for other potential Reddit elements
-        console.log('\n=== Other Reddit Elements ===');
-        const otherSelectors = [
-            'reddit-feed',
-            'shreddit-comment',
-            'shreddit-post-action-bar',
-            'faceplate-toolbar',
-            '[data-testid="post-container"]'
-        ];
-        
-        otherSelectors.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            if (elements.length > 0) {
-                console.log(`${selector}: ${elements.length} found`);
-            }
-        });
-    };
-
 
     chrome.runtime.onMessage.addListener((obj, sender, response) => {
         const { postId, subreddit, type } = obj;
 
         if (type === "TOP" && postId) {
             currPost = postId;
-            console.log(`Message received for post: ${postId} from r/${subreddit}`);
             
             // Wait for Reddit to finish rendering the post
             waitForPostAndInject(postId, subreddit);
@@ -186,7 +121,6 @@
             await new Promise(r => setTimeout(r, 500));
             retries++;
         }
-        console.warn(`Could not inject button for ${postId} after ${retries} retries`);
     }
 
     async function injectButtonForPost(postId) {
@@ -205,17 +139,9 @@
 
         const postElement = findPostElementById(postId);
         if (!postElement) {
-            console.log(`Post element not found for ${postId}`);
             processedPosts.delete(postId); // Remove from set so we can retry later
             return false;
         }
-
-        console.log(`Post element found for ${postId}:`, {
-            tagName: postElement.tagName,
-            hasShadowRoot: !!postElement.shadowRoot,
-            shadowRootMode: postElement.shadowRoot ? 'open' : 'closed or none',
-            classList: Array.from(postElement.classList || [])
-        });
 
         let actionBar = findActionBar(postElement);
         let retries = 0;
@@ -226,13 +152,11 @@
         }
 
         if (!actionBar) {
-            console.log(`Action bar not found for ${postId}, trying alternative injection...`);
             return injectButtonAdjacent(postId, postElement);
         }
         
         const button = createCredibilityButton(postId);
         actionBar.appendChild(button);
-        console.log(`Injected button into action bar for ${postId}`);
         return true;
     }
 
@@ -240,7 +164,6 @@
         // New Reddit: shreddit-post[id*="t3_<postId>"]
         const post = document.querySelector(`shreddit-post[id*="${postId}"]`);
         if (post) {
-            console.log(`Found shreddit-post for ${postId}`);
             return post;
         }
 
@@ -252,16 +175,12 @@
 
     function findActionBar(postElement) {
         if (postElement.shadowRoot) {
-            console.log('Shadow root is accessible (open mode)');
             const toolbar = postElement.shadowRoot.querySelector(
                 "faceplate-toolbar, [data-testid='post-actions'], shreddit-post-action-bar, div[slot='action-row']"
             );
             if (toolbar) {
-                console.log('Found toolbar in shadow root:', toolbar.tagName);
                 return toolbar;
             }
-        } else {
-            console.log('Shadow root is NOT accessible (closed mode or doesn\'t exist)');
         }
 
         const actionBarSelectors = [
@@ -274,7 +193,6 @@
         for (const selector of actionBarSelectors) {
             const bar = postElement.querySelector(selector);
             if (bar) {
-                console.log('Found action bar with selector:', selector);
                 return bar;
             }
         }
@@ -284,7 +202,6 @@
         let attempts = 0;
         while (sibling && attempts < 3) {
             if (sibling.matches && sibling.matches("[data-testid='post-actions']")) {
-                console.log('Found action bar as sibling');
                 return sibling;
             }
             sibling = sibling.nextElementSibling;
@@ -295,14 +212,17 @@
     }
 
     function injectButtonAdjacent(postId, postElement) {
+        const theme = getCurrentTheme();
+        const colors = getThemeColors(theme);
+        
         // Create a container that sits adjacent to the post
         const container = document.createElement('div');
         container.className = 'credi-button-container';
         container.dataset.postId = postId;
         container.style.cssText = `
             padding: 16px;
-            background: #f6f7f8;
-            border-top: 1px solid #edeff1;
+            background: ${colors.containerBg};
+            border-top: 1px solid ${colors.containerBorder};
             display: flex;
             align-items: center;
             justify-content: center;
@@ -319,21 +239,41 @@
             postElement.parentNode.appendChild(container);
         }
 
-        console.log(`Injected button adjacent to post ${postId}`);
         return true;
     }
 
     function createCredibilityButton(postId) {
+        const theme = getCurrentTheme();
+        const colors = getThemeColors(theme);
+        
         const button = document.createElement("button");
         button.className = "credi-btn";
-        button.textContent = "🔍 Credify Post";
         button.dataset.postId = postId;
+        
+        // Create logo image
+        const logo = document.createElement("img");
+        logo.src = chrome.runtime.getURL("assets/credify-icon.png");
+        logo.alt = "Credify";
+        logo.style.cssText = `
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            vertical-align: middle;
+            margin-top: 10px;
+        `;
+        
+        // Create text node
+        const text = document.createTextNode("Credify Post");
+        
+        // Add logo and text to button
+        button.appendChild(logo);
+        button.appendChild(text);
 
         button.style.cssText = `
             padding: 12px 24px;
             margin: 0;
             border-radius: 24px;
-            background: #0079d3;
+            background: ${colors.buttonBg};
             color: white;
             border: none;
             cursor: pointer;
@@ -350,12 +290,12 @@
         `;
 
         button.onmouseover = () => {
-            button.style.background = "#005fa3";
+            button.style.background = colors.buttonHover;
             button.style.transform = "translateY(-1px)";
             button.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.15)";
         };
         button.onmouseout = () => {
-            button.style.background = "#0079d3";
+            button.style.background = colors.buttonBg;
             button.style.transform = "translateY(0)";
             button.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
         };
@@ -370,8 +310,6 @@
     }
 
     function handleButtonClick(postId) {
-        console.log(`Credibility check requested for post: ${postId}`);
-
         chrome.storage.local.get("lastAnalysis", function (data) {
             if (data.lastAnalysis && data.lastAnalysis.postId === postId) {
                 window.showCredibilityModal(data.lastAnalysis);
@@ -400,7 +338,6 @@
 
     function injectButtonsForAllPosts() {
         const posts = document.querySelectorAll("shreddit-post[id]");
-        console.log(`Found ${posts.length} posts, checking for button injection...`);
         posts.forEach(post => {
             const postId = post.id.replace("t3_", "");
             injectButtonForPost(postId);
@@ -432,13 +369,45 @@
                 const postId = urlParts[commentsIndex + 1];
                 const subreddit = urlParts[commentsIndex - 1];
                 
-                console.log(`Detected single post page: ${postId} from r/${subreddit}`);
-                
                 // Inject button for this post
                 setTimeout(() => {
                     waitForPostAndInject(postId, subreddit);
                 }, 1000);
             }
+        }
+    }
+
+    // Update button colors when theme changes
+    function updateButtonColors() {
+        const theme = getCurrentTheme();
+        const colors = getThemeColors(theme);
+        
+        document.querySelectorAll('.credi-btn').forEach(button => {
+            button.style.background = colors.buttonBg;
+            button.onmouseout = () => {
+                button.style.background = colors.buttonBg;
+                button.style.transform = "translateY(0)";
+                button.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+            };
+        });
+        
+        document.querySelectorAll('.credi-button-container').forEach(container => {
+            container.style.background = colors.containerBg;
+            container.style.borderTop = `1px solid ${colors.containerBorder}`;
+        });
+    }
+
+    // Watch for theme changes
+    function observeThemeChanges() {
+        const shredditApp = document.querySelector('shreddit-app');
+        if (shredditApp) {
+            const themeObserver = new MutationObserver(() => {
+                updateButtonColors();
+            });
+            themeObserver.observe(shredditApp, { 
+                attributes: true, 
+                attributeFilter: ['theme'] 
+            });
         }
     }
 
@@ -449,11 +418,13 @@
         document.addEventListener("DOMContentLoaded", () => {
             injectButtonsForAllPosts();
             initializeSinglePostPage();
+            observeThemeChanges();
         });
     } else {
         setTimeout(() => {
             injectButtonsForAllPosts();
             initializeSinglePostPage();
+            observeThemeChanges();
         }, 1000);
     }
 

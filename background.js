@@ -8,16 +8,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         let postId = null;
         let subreddit = null;
         
-        // Check if URL contains /comments/ (indicates single post page)
         const commentsIndex = urlParts.indexOf("comments");
         if (commentsIndex !== -1 && commentsIndex + 1 < urlParts.length) {
             postId = urlParts[commentsIndex + 1];
             subreddit = urlParts[commentsIndex - 1];
-            
-            console.log(`Detected navigation to post: ${postId} from r/${subreddit}`);
         }
         
-        // Send message to content script (works for both feed and post pages)
         chrome.tabs.sendMessage(tabId, {
             type: "TOP",
             postId: postId,
@@ -29,12 +25,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     // Handle messages from content script
     if (request.content === "postAnalyzed") {
-        console.log(`Analysis received for post ${request.postId} from r/${request.subreddit}`);
-        console.log(`Title: "${request.analysis.title}"`);
-        console.log(`Score: ${request.analysis.score}/10`);
-        console.log(`Flags: ${request.analysis.flags.join(', ')}`);
-        
-        // Store the analysis result for later use
+        // Cache
         chrome.storage.local.set({
             lastAnalysis: {
                 postId: request.postId,
@@ -47,9 +38,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         });
     }
     
-    // Handle messages from popup
     if (request.action === "checkPost") {
-        // Trigger content script to analyze the current post
+        // Trigger for curr post
         chrome.tabs.sendMessage(request.tabId, { type: "ANALYZE_NOW" });
         
         chrome.storage.local.get('lastAnalysis', function(data) {
@@ -63,7 +53,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }
         });
         
-        // Return true to indicate we'll respond asynchronously
         return true;
     }
 });
